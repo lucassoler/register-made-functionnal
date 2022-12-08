@@ -11,21 +11,26 @@ import {PasswordEncryptorService} from "../identityAndAccess/writes/domain/ports
 import {Logger, WinstonLogger} from "../sharedKernel/services/logger";
 import {NodeEnvironmentVariables} from "./environment/environmentVariables";
 import {ExpressUtils, MapDomainError} from "../web/expressUtils";
+import {getDataSource} from "./typeorm/connection";
+import {DataSource} from "typeorm";
 
 export interface Dependencies {
     userRepository: UserRepository,
     passwordEncryptor: PasswordEncryptorService,
-    logger: Logger
+    logger: Logger,
+    dataSource: DataSource
 }
 
 export const serviceLocator = (): Dependencies => {
     const environmentVariables = new NodeEnvironmentVariables();
     const logger = new WinstonLogger(environmentVariables);
+    const dataSource = getDataSource(environmentVariables);
 
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
         userRepository : new UserRepositoryInMemory(),
-        logger
+        logger,
+        dataSource
     }
 }
 

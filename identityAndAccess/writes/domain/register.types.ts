@@ -5,6 +5,7 @@ export type Email = string;
 export type UnvalidatedPassword = string;
 export type Password = string;
 export type EncryptedPassword = string;
+export type UserId = string;
 
 export type UnvalidatedUser = {
     email: UnvalidatedEmail,
@@ -13,10 +14,16 @@ export type UnvalidatedUser = {
 
 export type ValidatedUser = {
     email: Email,
-    password: Password
+    password: Password,
 }
 
 export type EncryptedUser = {
+    email: Email,
+    password: EncryptedPassword
+}
+
+export type User = {
+    id: UserId
     email: Email,
     password: EncryptedPassword
 }
