@@ -6,6 +6,7 @@ import {UserRepositoryTypeOrm} from "../../../writes/infrastructure/userReposito
 import {FakeUuidGenerator} from "../../../writes/infrastructure/fakeUuidGenerator";
 import {User} from "../../../writes/domain/register.types";
 import {EmailAlreadyUsed, PersistUserError} from "../../../writes/domain/register.errors";
+
 describe('UserRepositoryTypeOrm - Save', () => {
     let repository: UserRepositoryTypeOrm;
     let fakeUuidGenerator: FakeUuidGenerator;
@@ -74,6 +75,9 @@ function verifyPersistedUser(persistedUser: UserEntity | null, user: User) {
     expect(persistedUser!.password).toStrictEqual(user.password);
 }
 
-async function retrievePersistedUser(dataSource: DataSource, userId: string) {
-    return await dataSource.getRepository(UserEntity).createQueryBuilder("user").where("user.id = :id", { id: userId }).getOne();
-}
+const retrievePersistedUser = async (dataSource: DataSource, userId: string) =>
+    await dataSource
+        .getRepository(UserEntity)
+        .createQueryBuilder("user")
+        .where("user.id = :id", {id: userId})
+        .getOne()

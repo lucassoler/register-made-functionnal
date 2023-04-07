@@ -13,8 +13,8 @@ import {NodeEnvironmentVariables} from "./environment/environmentVariables";
 import {ExpressUtils, MapDomainError} from "../web/expressUtils";
 import {getDataSource} from "./typeorm/connection";
 import {DataSource} from "typeorm";
-import {FakeUuidGenerator} from "../identityAndAccess/writes/infrastructure/fakeUuidGenerator";
 import {UuidGenerator} from "../identityAndAccess/writes/domain/ports/uuidGenerator";
+import {CryptoUuidGenerator} from "../identityAndAccess/writes/infrastructure/cryptoUuidGenerator";
 
 export interface Dependencies {
     userRepository: UserRepository,
@@ -32,7 +32,7 @@ export const serviceLocator = (): Dependencies => {
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
         userRepository : new UserRepositoryInMemory(),
-        uuidGenerator : new FakeUuidGenerator(),
+        uuidGenerator : new CryptoUuidGenerator(),
         logger,
         dataSource
     }
