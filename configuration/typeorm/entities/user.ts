@@ -1,11 +1,12 @@
-import {Column, Entity, PrimaryGeneratedColumn, Unique} from "typeorm"
+import {Column, Entity, Index, PrimaryGeneratedColumn} from "typeorm"
 
 @Entity("user")
+@Index(`email_unique_index`, ['email'], { unique: true })
 export class UserEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string
 
-    @Column({ type: "text", unique: true})
+    @Column({ type: "text"})
     email: string
 
     @Column("text")

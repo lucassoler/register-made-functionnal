@@ -1,4 +1,4 @@
-import {encryptUserPassword, register, saveUser} from "../../writes/workflows/register/register";
+import {encryptUserPassword, identifyUser, register, saveUser} from "../../writes/workflows/register/register";
 import {
     UnvalidatedUser,
     UserRegister
@@ -16,6 +16,7 @@ import {
     PasswordShouldContainsSpecialCharacters,
     PasswordShouldHaveAMinimumLength
 } from "../../writes/domain/register.errors";
+import {FakeUuidGenerator} from "../../writes/infrastructure/fakeUuidGenerator";
 
 describe('Register a new user', function () {
     let userRepository: UserRepositoryInMemory;
@@ -28,7 +29,7 @@ describe('Register a new user', function () {
     test('should register a new user', async () => {
         const result = await registerUser(A.User().build());
         expect(result.isRight()).toBeTruthy();
-        result.ifRight(x => expect(x).toStrictEqual(UserRegister));
+        result.ifRight(x => expect(x).toStrictEqual(new UserRegister("f7eafd96-c194-4730-8de6-9da1c330bff3")));
     });
 
     test('should persist user', async () => {
@@ -77,7 +78,7 @@ describe('Register a new user', function () {
     }
 
     function prepareWorkflow() {
-        return register(encryptUserPassword(passwordEncryptor), saveUser(userRepository));
+        return register(encryptUserPassword(passwordEncryptor), identifyUser(new FakeUuidGenerator()), saveUser(userRepository));
     }
 });
 

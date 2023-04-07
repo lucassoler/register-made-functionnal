@@ -4,7 +4,8 @@ import {NodeEnvironmentVariables} from "../../../../configuration/environment/en
 import {UserEntity} from "../../../../configuration/typeorm/entities/user";
 import {UserRepositoryTypeOrm} from "../../../writes/infrastructure/userRepositoryTypeOrm";
 import {FakeUuidGenerator} from "../../../writes/infrastructure/fakeUuidGenerator";
-import {EncryptedUser, User} from "../../../writes/domain/register.types";
+import {User} from "../../../writes/domain/register.types";
+import {EmailAlreadyUsed, PersistUserError} from "../../../writes/domain/register.errors";
 describe('UserRepositoryTypeOrm - Save', () => {
     let repository: UserRepositoryTypeOrm;
     let fakeUuidGenerator: FakeUuidGenerator;
@@ -23,18 +24,19 @@ describe('UserRepositoryTypeOrm - Save', () => {
 
     beforeEach(() => {
         fakeUuidGenerator = new FakeUuidGenerator();
-        repository = new UserRepositoryTypeOrm(fakeUuidGenerator, dataSource);
+        repository = new UserRepositoryTypeOrm(dataSource);
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await dataSource
             .createQueryBuilder()
             .delete()
             .from(UserEntity)
-            .where("id = :id", { id: USER_TO_PERSIST.id })
+            .where("id = ANY(:ids)", {ids: [USER_TO_PERSIST.id, 'ae358410-25f4-4651-b94b-2b786b358d5f']})
             .execute();
+    });
 
-
+    afterAll(async () => {
         await dataSource.destroy();
     });
 
@@ -43,6 +45,26 @@ describe('UserRepositoryTypeOrm - Save', () => {
         const persistedUser = await retrievePersistedUser(dataSource, USER_TO_PERSIST.id);
         verifyPersistedUser(persistedUser, USER_TO_PERSIST);
     });
+
+    test('should return an email already used error if user already persisted', async () => {
+        await repository.persistUser({
+            id: 'ae358410-25f4-4651-b94b-2b786b358d5f',
+            email: "jane.doe@gmail.com",
+            password: "Password"
+        });
+        const result = await repository.persistUser(USER_TO_PERSIST);
+        expect(result.isLeft()).toBeTruthy();
+        result.mapLeft(error => expect(error).toStrictEqual(new EmailAlreadyUsed('jane.doe@gmail.com')));
+    });
+
+
+    test('uncaught error : id already used', async () => {
+        await repository.persistUser(USER_TO_PERSIST);
+        const result = await repository.persistUser(USER_TO_PERSIST);
+        expect(result.isLeft()).toBeTruthy();
+        result.mapLeft(error => expect(error).toStrictEqual(new PersistUserError()));
+    });
+
 });
 
 function verifyPersistedUser(persistedUser: UserEntity | null, user: User) {

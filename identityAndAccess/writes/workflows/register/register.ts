@@ -6,24 +6,29 @@ import {
     UserRegister,
     ValidatedUser
 } from "../../domain/register.types";
-import {Either, EitherAsync, Right} from "purify-ts";
+import {Either, EitherAsync, MaybeAsync, Right} from "purify-ts";
 import {PasswordEncryptorService} from "../../domain/ports/passwordEncryptor";
 import {checkUserToRegister} from "./checkUserToRegister";
 import {UserRepository} from "../../domain/ports/userRepository";
-import {EmailAlreadyUsed, EncryptionServiceError} from "../../domain/register.errors";
+import {EmailAlreadyUsed, EncryptionServiceError, InvalidUser} from "../../domain/register.errors";
+import {UuidGenerator} from "../../domain/ports/uuidGenerator";
 
 export type RegisterWorkflow = (user: UnvalidatedUser) => EitherAsync<RegisterErrors, RegisterEvents>;
-export const register = (encryptUser: EncryptUserPassword, saveUser: SaveUser): RegisterWorkflow =>
+export const register = (encryptUser: EncryptUserPassword, identifyUser: IdentifyUser, saveUser: SaveUser): RegisterWorkflow =>
     (user: UnvalidatedUser) => EitherAsync.liftEither(checkUserToRegister(user))
         .chain(validatedUser => encryptUser(validatedUser))
-        .chain(encryptedUser => EitherAsync.liftEither(identifyUser(encryptedUser)))
+        .chain(encryptedUser => identifyUser(encryptedUser).toEitherAsync(new InvalidUser([]))
         .chain(user => saveUser(user))
-        .chain(user => EitherAsync.liftEither(createRegisterEvents(user)));
+        .chain(user => EitherAsync.liftEither(createRegisterEvents(user))));
 
-export const identifyUser = (user: EncryptedUser): Either<RegisterErrors, User> => Right({
-    id: 'f7eafd96-c194-4730-8de6-9da1c330bff3',
-    ...user
-});
+type IdentifyUser = (encryptedUser: EncryptedUser) => MaybeAsync<User>;
+
+export const identifyUser = (uuidGenerator: UuidGenerator): IdentifyUser =>
+    (user: EncryptedUser): MaybeAsync<User> =>
+        uuidGenerator.generate().map(uuid => ({
+            ...user,
+            id: uuid
+        }));
 
 type EncryptUserPassword = (validatedUser: ValidatedUser) => EitherAsync<RegisterErrors, EncryptedUser>;
 export const encryptUserPassword = (encryptPasswordService: PasswordEncryptorService): EncryptUserPassword =>
@@ -31,8 +36,8 @@ export const encryptUserPassword = (encryptPasswordService: PasswordEncryptorSer
         .encrypt(validatedUser.password)
         .map(encryptedPassword => ({...validatedUser, password: encryptedPassword}));
 
-type SaveUser = (user: User) => EitherAsync<EmailAlreadyUsed, EncryptedUser>;
-export const saveUser = (userRepository: UserRepository) : SaveUser => (user: User) =>
+type SaveUser = (user: User) => EitherAsync<EmailAlreadyUsed, User>;
+export const saveUser = (userRepository: UserRepository): SaveUser => (user: User) =>
     userRepository.persistUser(user);
 
-const createRegisterEvents = (user: EncryptedUser): Either<EncryptionServiceError, RegisterEvents> => Right(UserRegister);
+const createRegisterEvents = (user: User): Either<RegisterErrors, RegisterEvents> => Right(new UserRegister(user.id));

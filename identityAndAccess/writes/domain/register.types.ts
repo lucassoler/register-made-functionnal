@@ -28,7 +28,13 @@ export type User = {
     password: EncryptedPassword
 }
 
-export type RegisterEvents = string;
+export abstract class RegisterEvents {
+
+}
 export type RegisterErrors = InvalidUser | EncryptUserError | EmailAlreadyUsed;
 
-export const UserRegister: RegisterEvents = "User registered";
+export class UserRegister extends RegisterEvents {
+    constructor(readonly userId: UserId) {
+        super();
+    }
+}

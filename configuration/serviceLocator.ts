@@ -1,5 +1,5 @@
 import {
-    encryptUserPassword,
+    encryptUserPassword, identifyUser,
     register,
     RegisterWorkflow,
     saveUser
@@ -13,10 +13,13 @@ import {NodeEnvironmentVariables} from "./environment/environmentVariables";
 import {ExpressUtils, MapDomainError} from "../web/expressUtils";
 import {getDataSource} from "./typeorm/connection";
 import {DataSource} from "typeorm";
+import {FakeUuidGenerator} from "../identityAndAccess/writes/infrastructure/fakeUuidGenerator";
+import {UuidGenerator} from "../identityAndAccess/writes/domain/ports/uuidGenerator";
 
 export interface Dependencies {
     userRepository: UserRepository,
     passwordEncryptor: PasswordEncryptorService,
+    uuidGenerator: UuidGenerator,
     logger: Logger,
     dataSource: DataSource
 }
@@ -29,6 +32,7 @@ export const serviceLocator = (): Dependencies => {
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
         userRepository : new UserRepositoryInMemory(),
+        uuidGenerator : new FakeUuidGenerator(),
         logger,
         dataSource
     }
@@ -41,7 +45,7 @@ export interface Workflows {
 
 export const workflows = (dependencies: Dependencies): Workflows =>  {
     return {
-        register: register(encryptUserPassword(dependencies.passwordEncryptor), saveUser(dependencies.userRepository)),
+        register: register(encryptUserPassword(dependencies.passwordEncryptor), identifyUser(dependencies.uuidGenerator), saveUser(dependencies.userRepository)),
         mapDomainError: ExpressUtils.domainErrorHandling(dependencies.logger)
     }
 

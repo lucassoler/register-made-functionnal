@@ -1,4 +1,9 @@
-import {DomainConflictError, DomainError, DomainValidationError} from "../../../sharedKernel/domain/domainError";
+import {
+    DomainConflictError,
+    DomainError,
+    DomainServerError,
+    DomainValidationError
+} from "../../../sharedKernel/domain/domainError";
 import IdentityErrorCodes from "./identityErrorCodes";
 
 export class EmailAlreadyUsed extends DomainConflictError {
@@ -6,6 +11,13 @@ export class EmailAlreadyUsed extends DomainConflictError {
 
     constructor(email: string) {
         super(`email "${email}" already used`);
+    }
+}
+export class PersistUserError extends DomainServerError {
+    readonly code = IdentityErrorCodes.PersistUserError;
+
+    constructor() {
+        super(`Unexpected error`);
     }
 }
 

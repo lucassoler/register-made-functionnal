@@ -15,6 +15,10 @@ export abstract class DomainConflictError extends DomainError {
 
 }
 
+export abstract class DomainServerError extends DomainError {
+
+}
+
 export abstract class DomainNotFoundError extends DomainError {
 
 }

@@ -10,6 +10,7 @@ export default class IdentityErrorCodes {
     static readonly InvalidUser = IdentityErrorCodes.concatErrorCode("4004");
     static readonly EncryptionServiceError = IdentityErrorCodes.concatErrorCode("4005");
     static readonly PasswordShouldContainsSpecialCharacters = IdentityErrorCodes.concatErrorCode("4006");
+    static readonly PersistUserError = IdentityErrorCodes.concatErrorCode("4007");
 
     private static concatErrorCode(error: string) {
         return IdentityErrorCodes.IDENTITY_ERROR_CODE + error;
