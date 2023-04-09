@@ -29,7 +29,7 @@ describe('Register a new user', function () {
     test('should register a new user', async () => {
         const result = await registerUser(A.User().build());
         expect(result.isRight()).toBeTruthy();
-        result.ifRight(x => expect(x).toStrictEqual(new UserRegister("f7eafd96-c194-4730-8de6-9da1c330bff3")));
+        result.ifRight(x => expect(x).toStrictEqual(new UserRegister("f7eafd96-c194-4730-8de6-9da1c330bff3", "jane.doe@gmail.com")));
     });
 
     test('should persist user', async () => {

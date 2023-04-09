@@ -1,4 +1,5 @@
 import {EmailAlreadyUsed, EncryptUserError, InvalidUser} from "./register.errors";
+import {DomainEvent} from "../../../sharedKernel/domain/domainEvent";
 
 export type UnvalidatedEmail = string;
 export type Email = string;
@@ -28,13 +29,13 @@ export type User = {
     password: EncryptedPassword
 }
 
-export abstract class RegisterEvents {
+export abstract class RegisterEvents extends DomainEvent {
 
 }
 export type RegisterErrors = InvalidUser | EncryptUserError | EmailAlreadyUsed;
 
 export class UserRegister extends RegisterEvents {
-    constructor(readonly userId: UserId) {
+    constructor(readonly userId: UserId, readonly email: Email) {
         super();
     }
 }

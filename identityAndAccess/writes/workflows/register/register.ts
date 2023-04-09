@@ -40,4 +40,4 @@ export const saveUser = (userRepository: UserRepository): SaveUser =>
     (user: User) => userRepository.persistUser(user);
 
 const createRegisterEvents = (user: User): EitherAsync<RegisterErrors, RegisterEvents> =>
-    EitherAsync.liftEither(Right(new UserRegister(user.id)));
+    EitherAsync.liftEither(Right(new UserRegister(user.id, user.email)));
