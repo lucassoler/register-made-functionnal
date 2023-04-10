@@ -1,5 +1,5 @@
-import {MaybeAsync} from "purify-ts";
+import {Task} from "fp-ts/Task";
 
 export interface UuidGenerator {
-    generate(): MaybeAsync<string>;
+    generate(): Task<string>;
 }

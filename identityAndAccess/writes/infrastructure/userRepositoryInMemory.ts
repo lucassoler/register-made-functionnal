@@ -1,17 +1,18 @@
-import {Email, EncryptedUser, User,} from "../domain/register.types";
-import {EitherAsync, Just, Left, Maybe, Right} from "purify-ts";
-import {UserRepository} from "../domain/ports/userRepository";
-import {EmailAlreadyUsed} from "../domain/register.errors";
+import * as TE from 'fp-ts/lib/TaskEither';
+import { Email, EncryptedUser, User } from '../domain/register.types';
+import { EmailAlreadyUsed } from '../domain/register.errors';
+import {UserRepository} from "../workflows/register/registed.fp-ts";
 
 export class UserRepositoryInMemory implements UserRepository {
     private readonly persistedUsers: EncryptedUser[] = [];
 
-    persistUser(user: User): EitherAsync<EmailAlreadyUsed, User> {
-        if (this.persistedUsers.find(user => user.email === user.email)) {
-            return EitherAsync.liftEither(Left(new EmailAlreadyUsed(user.email)));
+    persistUser(user: User): TE.TaskEither<EmailAlreadyUsed, User> {
+        const existingUser = this.persistedUsers.find(u => u.email === user.email);
+        if (existingUser) {
+            return TE.left(new EmailAlreadyUsed(user.email));
         }
         this.persistedUsers.push(user);
-        return EitherAsync.liftEither(Right(user));
+        return TE.right(user);
     }
 
     findByEmail(email: Email): EncryptedUser {
