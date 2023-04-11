@@ -5,7 +5,6 @@ describe('crypto uuid generator', () => {
         const uuidGenerator = new CryptoUuidGenerator();
         const regex = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/;
        const result = await uuidGenerator.generate()();
-       //expect(result).toEqual(Just(expect.stringMatching(regex)))
        expect(result).toEqual(expect.stringMatching(regex));
    });
 });

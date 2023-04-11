@@ -3,6 +3,7 @@ import {FakeEmailSender} from "../../writes/infrastructure/fake-email.sender";
 import {SendWelcomeEmailTypes} from "../../writes/domain/send-welcome-email.types";
 import {SendWelcomeEmailErrors} from "../../writes/domain/send-welcome-email.errors";
 import {sendEmailToCustomer} from "../../writes/workflows/sendWelcomeEmail/send-welcome-email.workflow";
+import * as E from "fp-ts/Either";
 
 describe("send welcome email on register", () => {
     let fakeEmailSender: FakeEmailSender;
@@ -13,8 +14,8 @@ describe("send welcome email on register", () => {
 
     test("should returns a welcome email sent event", async () => {
         const result = await runWorkflow();
-        expect(result.isRight()).toBeTruthy();
-        expect(result.extract()).toStrictEqual(new SendWelcomeEmailTypes());
+        expect(E.isRight(result)).toBeTruthy();
+        expect(result).toEqual(E.right(new SendWelcomeEmailTypes()));
     });
 
     test("should send a welcome email", async () => {
@@ -23,10 +24,11 @@ describe("send welcome email on register", () => {
     });
 
     test("should returns an error if email sender fails", async () => {
-        fakeEmailSender.throwError(new SendWelcomeEmailErrors());
+        const sendWelcomeEmailErrors = new SendWelcomeEmailErrors();
+        fakeEmailSender.throwError(sendWelcomeEmailErrors);
         const result = await runWorkflow();
-        expect(result.isLeft()).toBeTruthy();
-        expect(result.extract()).toStrictEqual(new SendWelcomeEmailErrors());
+        expect(E.isLeft(result)).toBeTruthy();
+        expect(result).toEqual(E.left(sendWelcomeEmailErrors));
     });
 
     function prepareWorkflow() {
@@ -35,7 +37,7 @@ describe("send welcome email on register", () => {
 
     async function runWorkflow(email: string = "my-test@email.com") {
         const workflow = prepareWorkflow();
-        return await workflow(new UserRegister("cfd951d4-cb21-4969-af9e-79a518297a57", email)).run();
+        return await workflow(new UserRegister("cfd951d4-cb21-4969-af9e-79a518297a57", email))();
     }
 });
 
