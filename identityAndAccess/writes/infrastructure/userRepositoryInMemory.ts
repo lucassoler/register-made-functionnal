@@ -1,7 +1,7 @@
 import * as TE from 'fp-ts/lib/TaskEither';
 import { Email, EncryptedUser, User } from '../domain/register.types';
 import { EmailAlreadyUsed } from '../domain/register.errors';
-import {UserRepository} from "../workflows/register/registed.fp-ts";
+import {UserRepository} from "../domain/ports/userRepository";
 
 export class UserRepositoryInMemory implements UserRepository {
     private readonly persistedUsers: EncryptedUser[] = [];

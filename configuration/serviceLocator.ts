@@ -1,9 +1,4 @@
-import {
-    encryptUserPassword, identifyUser,
-    register,
-    RegisterWorkflow,
-    saveUser
-} from "../identityAndAccess/writes/workflows/register/register";
+
 import {FakePasswordEncryptor} from "../identityAndAccess/writes/infrastructure/fakePasswordEncryptor";
 import {UserRepositoryInMemory} from "../identityAndAccess/writes/infrastructure/userRepositoryInMemory";
 import {UserRepository} from "../identityAndAccess/writes/domain/ports/userRepository";
@@ -22,6 +17,12 @@ import {
 import {ISendEmailToCustomer} from "../identityAndAccess/writes/domain/ports/ISendEmailToCustomer";
 import {FakeEmailSender} from "../identityAndAccess/writes/infrastructure/fake-email.sender";
 import {DomainEvent} from "../sharedKernel/domain/domainEvent";
+import {
+    encryptUserPassword, identifyUser,
+    register,
+    RegisterWorkflow, saveUser
+} from "../identityAndAccess/writes/workflows/register/register";
+import {UserRepositoryTypeOrm} from "../identityAndAccess/writes/infrastructure/userRepositoryTypeOrm";
 
 export interface Dependencies {
     userRepository: UserRepository,
@@ -39,7 +40,7 @@ export const serviceLocator = (): Dependencies => {
 
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
-        userRepository : new UserRepositoryInMemory(),
+        userRepository : new UserRepositoryTypeOrm(dataSource),
         uuidGenerator : new CryptoUuidGenerator(),
         emailSender: new FakeEmailSender(),
         logger,

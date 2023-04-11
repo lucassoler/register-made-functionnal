@@ -20,9 +20,9 @@ import {FakeUuidGenerator} from "../../writes/infrastructure/fakeUuidGenerator";
 import {
     encryptUserPassword,
     identifyUser,
-    registerFpTs,
+    register,
     saveUser
-} from "../../writes/workflows/register/registed.fp-ts";
+} from "../../writes/workflows/register/register";
 import {isRight, right} from "fp-ts/Either";
 
 describe('Register a new user', function () {
@@ -85,7 +85,7 @@ describe('Register a new user', function () {
     }
 
     function prepareWorkflow() {
-        return registerFpTs(encryptUserPassword(passwordEncryptor), identifyUser(new FakeUuidGenerator()), saveUser(userRepository));
+        return register(encryptUserPassword(passwordEncryptor), identifyUser(new FakeUuidGenerator()), saveUser(userRepository));
     }
 });
 

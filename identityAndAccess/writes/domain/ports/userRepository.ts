@@ -1,8 +1,9 @@
-import {EncryptedUser, User} from "../register.types";
-import {EitherAsync} from "purify-ts";
+import {User} from "../register.types";
 import {EmailAlreadyUsed} from "../register.errors";
+import {TaskEither} from "fp-ts/TaskEither";
+
 
 
 export interface UserRepository {
-    persistUser(user: User): EitherAsync<EmailAlreadyUsed, User>;
+    persistUser(user: User): TaskEither<EmailAlreadyUsed, User>;
 }

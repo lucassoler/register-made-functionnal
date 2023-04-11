@@ -1,10 +1,11 @@
 import {BcryptPasswordEncryptor} from "../../../writes/infrastructure/bcryptPasswordEncryptor";
-import {Right} from "purify-ts";
+import * as E from "fp-ts/Either";
 
 describe('bcrypt password encryptor', () => {
-    test('should encrypt password', () => {
+    test('should encrypt password', async () => {
         const passwordEncryptor = new BcryptPasswordEncryptor();
-        expect(passwordEncryptor.encrypt('password')).resolves.not.toEqual(Right('password'));
+        const result = await passwordEncryptor.encrypt('password');
+        expect(result).not.toEqual(E.right('password'));
     });
 });
 

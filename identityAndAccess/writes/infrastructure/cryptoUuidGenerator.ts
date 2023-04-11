@@ -1,9 +1,10 @@
 import {UuidGenerator} from "../domain/ports/uuidGenerator";
-import {Just, MaybeAsync} from "purify-ts";
 import {randomUUID} from "crypto";
+import {Task} from "fp-ts/lib/Task";
+import {FromTask} from "fp-ts/Task";
 
 export class CryptoUuidGenerator implements UuidGenerator {
-    generate(): MaybeAsync<string> {
-        return MaybeAsync.liftMaybe(Just(randomUUID()));
+    generate(): Task<string> {
+        return FromTask.fromTask(() => Promise.resolve(randomUUID()));
     }
 }

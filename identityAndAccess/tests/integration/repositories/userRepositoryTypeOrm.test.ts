@@ -6,6 +6,8 @@ import {UserRepositoryTypeOrm} from "../../../writes/infrastructure/userReposito
 import {FakeUuidGenerator} from "../../../writes/infrastructure/fakeUuidGenerator";
 import {User} from "../../../writes/domain/register.types";
 import {EmailAlreadyUsed, PersistUserError} from "../../../writes/domain/register.errors";
+import {isLeft} from "fp-ts/Either";
+import * as E from "fp-ts/Either";
 
 describe('UserRepositoryTypeOrm - Save', () => {
     let repository: UserRepositoryTypeOrm;
@@ -42,7 +44,7 @@ describe('UserRepositoryTypeOrm - Save', () => {
     });
 
     test('should persist user in database', async () => {
-        await repository.persistUser(USER_TO_PERSIST);
+        await repository.persistUser(USER_TO_PERSIST)();
         const persistedUser = await retrievePersistedUser(dataSource, USER_TO_PERSIST.id);
         verifyPersistedUser(persistedUser, USER_TO_PERSIST);
     });
@@ -52,18 +54,18 @@ describe('UserRepositoryTypeOrm - Save', () => {
             id: 'ae358410-25f4-4651-b94b-2b786b358d5f',
             email: "jane.doe@gmail.com",
             password: "Password"
-        });
-        const result = await repository.persistUser(USER_TO_PERSIST);
-        expect(result.isLeft()).toBeTruthy();
-        result.mapLeft(error => expect(error).toStrictEqual(new EmailAlreadyUsed('jane.doe@gmail.com')));
+        })();
+        const result = await repository.persistUser(USER_TO_PERSIST)();
+        expect(isLeft(result)).toBeTruthy();
+        expect(result).toEqual(E.left(new EmailAlreadyUsed('jane.doe@gmail.com')));
     });
 
 
     test('uncaught error : id already used', async () => {
-        await repository.persistUser(USER_TO_PERSIST);
-        const result = await repository.persistUser(USER_TO_PERSIST);
-        expect(result.isLeft()).toBeTruthy();
-        result.mapLeft(error => expect(error).toStrictEqual(new PersistUserError()));
+        await repository.persistUser(USER_TO_PERSIST)();
+        const result = await repository.persistUser(USER_TO_PERSIST)();
+        expect(isLeft(result)).toBeTruthy();
+        expect(result).toEqual(E.left(new PersistUserError()));
     });
 
 });

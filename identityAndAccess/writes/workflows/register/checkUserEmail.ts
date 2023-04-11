@@ -1,11 +1,13 @@
 import {UnvalidatedUser} from "../../domain/register.types";
-import {Either, Left, Right} from "purify-ts";
+import * as E from "fp-ts/Either";
 import {InvalidEmail} from "../../domain/register.errors";
+import {left, right} from "fp-ts/Either";
 
-export function checkUserEmail(unvalidatedUser: UnvalidatedUser): Either<InvalidEmail, UnvalidatedUser> {
+
+export function checkUserEmail(unvalidatedUser: UnvalidatedUser): E.Either<InvalidEmail, UnvalidatedUser> {
     if (!unvalidatedUser.email.includes("@")) {
-        return Left(new InvalidEmail());
+        return left(new InvalidEmail());
     }
 
-    return Right(unvalidatedUser);
+    return right(unvalidatedUser);
 }
