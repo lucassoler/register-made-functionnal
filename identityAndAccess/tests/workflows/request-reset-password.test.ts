@@ -19,13 +19,24 @@ export class RequestPasswordResetSent extends DomainEvent {
     }
 }
 
-function requestResetPassword(repository: IGenerateResetPasswordToken): RequestResetPasswordWorkflow {
+interface IGenerateResetPasswordToken {
+    generate(): string;
+}
+
+function requestResetPassword(repository: IStoreResetPasswordTokens, tokenGenerator: IGenerateResetPasswordToken): RequestResetPasswordWorkflow {
     return (request: UnvalidatedResetPasswordRequest) => {
         return pipe(
-            repository.storeResetPasswordToken({...request, token: '1234'}),
-            TE.chain(() => TE.right(new RequestPasswordResetSent(request.email)))
+            generateToken(tokenGenerator)(request),
+            TE.chain((request) => repository.storeResetPasswordToken(request)),
+            TE.chain((request) => TE.right(new RequestPasswordResetSent(request.email)))
         );
     }
+}
+
+const generateToken = (tokenGenerator: IGenerateResetPasswordToken) => {
+    return (request: UnvalidatedResetPasswordRequest): TE.TaskEither<RequestResetPasswordErrors, ResetPasswordRequest> => {
+        return TE.right({...request, token: tokenGenerator.generate()});
+    };
 }
 
 type ResetPasswordToken = string;
@@ -43,11 +54,11 @@ export class PersistResetPasswordTokenError extends DomainServerError {
 }
 
 
-interface IGenerateResetPasswordToken {
+interface IStoreResetPasswordTokens {
     storeResetPasswordToken(token: ResetPasswordRequest): TE.TaskEither<PersistResetPasswordTokenError, ResetPasswordRequest>;
 }
 
-class InMemoryRequestResetPasswordRepository implements IGenerateResetPasswordToken {
+class InMemoryRequestResetPasswordRepository implements IStoreResetPasswordTokens {
     private readonly tokens: ResetPasswordToken[] = [];
 
     storeResetPasswordToken(request: ResetPasswordRequest): TE.TaskEither<PersistResetPasswordTokenError, ResetPasswordRequest> {
@@ -60,8 +71,26 @@ class InMemoryRequestResetPasswordRepository implements IGenerateResetPasswordTo
     }
 }
 
+class FakeResetPasswordTokenGenerator implements IGenerateResetPasswordToken {
+    private nextTokenToReturn: ResetPasswordToken = '';
+
+    nextToken(tokenGenerated: ResetPasswordToken) {
+        this.nextTokenToReturn = tokenGenerated;
+    }
+
+    generate(): string {
+        return this.nextTokenToReturn;
+    }
+}
+
 describe('Request reset password', function () {
     let requestResetPasswordRepository: InMemoryRequestResetPasswordRepository;
+    let requestResetPasswordTokenGenerator: FakeResetPasswordTokenGenerator;
+
+    beforeEach(() => {
+        requestResetPasswordRepository = new InMemoryRequestResetPasswordRepository();
+        requestResetPasswordTokenGenerator = new FakeResetPasswordTokenGenerator();
+    });
 
     test('request a reset password', async () => {
         const result = await resetPassword({email: 'jane.doe@gmail.com'});
@@ -70,8 +99,10 @@ describe('Request reset password', function () {
     });
 
     test('should generate a reset password token', async () => {
+        const tokenGenerated = '12345';
+        requestResetPasswordTokenGenerator.nextToken(tokenGenerated);
         await resetPassword({email: 'jane.doe@gmail.com'});
-        expect(requestResetPasswordRepository.shouldHaveStore('1234')).toBeTruthy();
+        expect(requestResetPasswordRepository.shouldHaveStore(tokenGenerated)).toBeTruthy();
     });
 
 
@@ -80,7 +111,6 @@ describe('Request reset password', function () {
     }
 
     function prepareWorkflow() {
-        requestResetPasswordRepository = new InMemoryRequestResetPasswordRepository();
-        return requestResetPassword(requestResetPasswordRepository);
+        return requestResetPassword(requestResetPasswordRepository, requestResetPasswordTokenGenerator);
     }
 });
