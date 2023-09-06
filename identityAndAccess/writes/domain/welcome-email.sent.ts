@@ -1,6 +1,6 @@
 import {DomainEvent} from "../../../sharedKernel/domain/domainEvent";
 
-export class SendWelcomeEmailTypes extends DomainEvent {
+export class WelcomeEmailSent extends DomainEvent {
     constructor() {
         super();
     }

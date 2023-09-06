@@ -1,7 +1,7 @@
 import {UserRegister} from "../../writes/domain/register.types";
 import {FakeEmailSender} from "../../writes/infrastructure/fake-email.sender";
-import {SendWelcomeEmailTypes} from "../../writes/domain/send-welcome-email.types";
-import {SendWelcomeEmailErrors} from "../../writes/domain/send-welcome-email.errors";
+import {WelcomeEmailSent} from "../../writes/domain/welcome-email.sent";
+import {SendWelcomeEmailError} from "../../writes/domain/send-welcome-email.errors";
 import {sendEmailToCustomer} from "../../writes/workflows/sendWelcomeEmail/send-welcome-email.workflow";
 import * as E from "fp-ts/Either";
 
@@ -15,7 +15,7 @@ describe("send welcome email on register", () => {
     test("should returns a welcome email sent event", async () => {
         const result = await runWorkflow();
         expect(E.isRight(result)).toBeTruthy();
-        expect(result).toEqual(E.right(new SendWelcomeEmailTypes()));
+        expect(result).toEqual(E.right(new WelcomeEmailSent()));
     });
 
     test("should send a welcome email", async () => {
@@ -24,7 +24,7 @@ describe("send welcome email on register", () => {
     });
 
     test("should returns an error if email sender fails", async () => {
-        const sendWelcomeEmailErrors = new SendWelcomeEmailErrors();
+        const sendWelcomeEmailErrors = new SendWelcomeEmailError();
         fakeEmailSender.throwError(sendWelcomeEmailErrors);
         const result = await runWorkflow();
         expect(E.isLeft(result)).toBeTruthy();
