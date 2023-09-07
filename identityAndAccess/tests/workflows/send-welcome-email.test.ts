@@ -4,6 +4,7 @@ import {WelcomeEmailSent} from "../../writes/domain/welcome-email.sent";
 import {SendWelcomeEmailError} from "../../writes/domain/send-welcome-email.errors";
 import {sendEmailToCustomer} from "../../writes/workflows/sendWelcomeEmail/send-welcome-email.workflow";
 import * as E from "fp-ts/Either";
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe("send welcome email on register", () => {
     let fakeEmailSender: FakeEmailSender;
@@ -20,7 +21,7 @@ describe("send welcome email on register", () => {
 
     test("should send a welcome email", async () => {
         await runWorkflow("my-email@test.com");
-        expect(fakeEmailSender.hasSentEmailTo("my-email@test.com")).toBeTruthy();
+        expect(fakeEmailSender.hasSentWelcomeEmailTo("my-email@test.com")).toBeTruthy();
     });
 
     test("should returns an error if email sender fails", async () => {

@@ -9,9 +9,10 @@ export default class IdentityErrorCodes {
     static readonly PersistUserError = IdentityErrorCodes.concatErrorCode("4007");
     static readonly SendWelcomeEmailError = IdentityErrorCodes.concatErrorCode("4008");
     static readonly PersistResetPasswordTokenError = IdentityErrorCodes.concatErrorCode("4009");
-    private static readonly IDENTITY_ERROR_CODE = "IDENTITY_ERR_";
+    static readonly EmailDoesNotExists = IdentityErrorCodes.concatErrorCode("4010");
+    static readonly SendResetPasswordEmailError = IdentityErrorCodes.concatErrorCode("4011");
 
     private static concatErrorCode(error: string) {
-        return IdentityErrorCodes.IDENTITY_ERROR_CODE + error;
+        return "IDENTITY_ERR_" + error;
     }
 }

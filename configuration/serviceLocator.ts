@@ -1,6 +1,4 @@
-
 import {FakePasswordEncryptor} from "../identityAndAccess/writes/infrastructure/fakePasswordEncryptor";
-import {UserRepositoryInMemory} from "../identityAndAccess/writes/infrastructure/userRepositoryInMemory";
 import {UserRepository} from "../identityAndAccess/writes/domain/ports/userRepository";
 import {PasswordEncryptorService} from "../identityAndAccess/writes/domain/ports/passwordEncryptor";
 import {Logger, WinstonLogger} from "../sharedKernel/services/logger";
@@ -18,9 +16,11 @@ import {ISendEmailToCustomer} from "../identityAndAccess/writes/domain/ports/ISe
 import {FakeEmailSender} from "../identityAndAccess/writes/infrastructure/fake-email.sender";
 import {DomainEvent} from "../sharedKernel/domain/domainEvent";
 import {
-    encryptUserPassword, identifyUser,
+    encryptUserPassword,
+    identifyUser,
     register,
-    RegisterWorkflow, saveUser
+    RegisterWorkflow,
+    saveUser
 } from "../identityAndAccess/writes/workflows/register/register";
 import {UserRepositoryTypeOrm} from "../identityAndAccess/writes/infrastructure/userRepositoryTypeOrm";
 
@@ -40,8 +40,8 @@ export const serviceLocator = (): Dependencies => {
 
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
-        userRepository : new UserRepositoryTypeOrm(dataSource),
-        uuidGenerator : new CryptoUuidGenerator(),
+        userRepository: new UserRepositoryTypeOrm(dataSource),
+        uuidGenerator: new CryptoUuidGenerator(),
         emailSender: new FakeEmailSender(),
         logger,
         dataSource
@@ -52,10 +52,10 @@ export interface Workflows {
     register: RegisterWorkflow,
     sendWelcomeEmail: SendWelcomeEmailWorkflow,
     mapDomainError: MapDomainError,
-    domainEventsPublisher: DomainEventPublisher
+    domainEventsPublisher: DomainEventPublisher,
 }
 
-export const workflows = (dependencies: Dependencies): Workflows =>  {
+export const workflows = (dependencies: Dependencies): Workflows => {
     return {
         register: register(encryptUserPassword(dependencies.passwordEncryptor), identifyUser(dependencies.uuidGenerator), saveUser(dependencies.userRepository)),
         sendWelcomeEmail: sendEmailToCustomer(dependencies.emailSender),

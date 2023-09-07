@@ -2,6 +2,7 @@ import request from 'supertest';
 import {ExpressServerHelper} from "../../helpers/expressServerHelper";
 import {ServiceLocatorHelper} from "../../helpers/serviceLocatorHelper";
 
+import {An} from "../../builders/An";
 
 describe('REST - Register new user', function () {
     let servicesHelper: ServiceLocatorHelper;
@@ -28,10 +29,12 @@ describe('REST - Register new user', function () {
     });
 
     test('request has failed with user email already used - return 409', async () => {
-        servicesHelper.userRepository.populate({
-            email: "jane.doe@gmail.com",
-            password: "Password!@"
-        });
+        servicesHelper.userRepository.populate(
+            An.ExistingUser()
+                .withEmail("jane.doe@gmail.com")
+                .withPassword("Password!@")
+                .build()
+        );
 
         const res = await request(server.get())
             .post('/api/identity/register')

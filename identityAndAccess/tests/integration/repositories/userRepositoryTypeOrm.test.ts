@@ -1,4 +1,4 @@
-import { DataSource } from "typeorm";
+import {DataSource} from "typeorm";
 import {getDataSource} from "../../../../configuration/typeorm/connection";
 import {NodeEnvironmentVariables} from "../../../../configuration/environment/environmentVariables";
 import {UserEntity} from "../../../../configuration/typeorm/entities/user";
@@ -6,8 +6,8 @@ import {UserRepositoryTypeOrm} from "../../../writes/infrastructure/userReposito
 import {FakeUuidGenerator} from "../../../writes/infrastructure/fakeUuidGenerator";
 import {User} from "../../../writes/domain/register.types";
 import {EmailAlreadyUsed, PersistUserError} from "../../../writes/domain/register.errors";
-import {isLeft} from "fp-ts/Either";
 import * as E from "fp-ts/Either";
+import {isLeft} from "fp-ts/Either";
 
 describe('UserRepositoryTypeOrm - Save', () => {
     let repository: UserRepositoryTypeOrm;
@@ -22,7 +22,6 @@ describe('UserRepositoryTypeOrm - Save', () => {
 
     beforeAll(async () => {
         dataSource = await getDataSource(new NodeEnvironmentVariables()).initialize();
-
     });
 
     beforeEach(() => {

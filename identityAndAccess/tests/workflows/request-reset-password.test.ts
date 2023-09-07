@@ -1,101 +1,38 @@
-import {Email} from "../../writes/domain/register.types";
-import * as TE from "fp-ts/TaskEither";
-import {pipe} from "fp-ts/function";
-import {DomainServerError} from "../../../sharedKernel/domain/domainError";
-import IdentityErrorCodes from "../../writes/domain/identityErrorCodes";
-import {DomainEvent} from "../../../sharedKernel/domain/domainEvent";
 import {isRight, right} from "fp-ts/Either";
+import {UserRepositoryInMemory} from "../../writes/infrastructure/userRepositoryInMemory";
+import {checkError} from "../helpers/checkError";
+import {requestResetPassword} from "../../writes/workflows/requestResetPassword/request-reset-password.workflow";
+import {
+    ResetPasswordFlowInitiated,
+    UnvalidatedResetPasswordRequest
+} from "../../writes/domain/request-reset-password.types";
+import {EmailDoesNotExists, SendResetPasswordEmailError} from "../../writes/domain/request-reset-password.errors";
+import {FakeResetPasswordTokenGenerator} from "../../writes/infrastructure/fakeResetPasswordTokenGenerator";
+import {
+    RequestResetPasswordRepositoryInMemory
+} from "../../writes/infrastructure/requestResetPasswordRepositoryInMemory";
+import {FakeEmailSender} from "../../writes/infrastructure/fake-email.sender";
+import {An} from "../builders/An";
+import {beforeEach, describe, expect, test} from 'vitest';
 
-type UnvalidatedResetPasswordRequest = {
-    email: Email
-}
-export type RequestResetPasswordWorkflow = (request: UnvalidatedResetPasswordRequest) => TE.TaskEither<RequestResetPasswordErrors, RequestPasswordResetSent>;
-export type RequestResetPasswordErrors = PersistResetPasswordTokenError;
-
-
-export class RequestPasswordResetSent extends DomainEvent {
-    constructor(readonly email: Email) {
-        super();
-    }
-}
-
-interface IGenerateResetPasswordToken {
-    generate(): string;
-}
-
-function requestResetPassword(repository: IStoreResetPasswordTokens, tokenGenerator: IGenerateResetPasswordToken): RequestResetPasswordWorkflow {
-    return (request: UnvalidatedResetPasswordRequest) => {
-        return pipe(
-            generateToken(tokenGenerator)(request),
-            TE.chain((request) => repository.storeResetPasswordToken(request)),
-            TE.chain((request) => TE.right(new RequestPasswordResetSent(request.email)))
-        );
-    }
-}
-
-const generateToken = (tokenGenerator: IGenerateResetPasswordToken) => {
-    return (request: UnvalidatedResetPasswordRequest): TE.TaskEither<RequestResetPasswordErrors, ResetPasswordRequest> => {
-        return TE.right({...request, token: tokenGenerator.generate()});
-    };
-}
-
-type ResetPasswordToken = string;
-
-type ResetPasswordRequest = UnvalidatedResetPasswordRequest & {
-    token: ResetPasswordToken
-};
-
-export class PersistResetPasswordTokenError extends DomainServerError {
-    readonly code = IdentityErrorCodes.PersistResetPasswordTokenError;
-
-    constructor() {
-        super(`Unexpected error`);
-    }
-}
-
-
-interface IStoreResetPasswordTokens {
-    storeResetPasswordToken(token: ResetPasswordRequest): TE.TaskEither<PersistResetPasswordTokenError, ResetPasswordRequest>;
-}
-
-class InMemoryRequestResetPasswordRepository implements IStoreResetPasswordTokens {
-    private readonly tokens: ResetPasswordToken[] = [];
-
-    storeResetPasswordToken(request: ResetPasswordRequest): TE.TaskEither<PersistResetPasswordTokenError, ResetPasswordRequest> {
-        this.tokens.push(request.token);
-        return TE.right(request);
-    }
-
-    shouldHaveStore(token: ResetPasswordToken) {
-        return this.tokens.includes(token);
-    }
-}
-
-class FakeResetPasswordTokenGenerator implements IGenerateResetPasswordToken {
-    private nextTokenToReturn: ResetPasswordToken = '';
-
-    nextToken(tokenGenerated: ResetPasswordToken) {
-        this.nextTokenToReturn = tokenGenerated;
-    }
-
-    generate(): string {
-        return this.nextTokenToReturn;
-    }
-}
-
-describe('Request reset password', function () {
-    let requestResetPasswordRepository: InMemoryRequestResetPasswordRepository;
+describe('Request reset password', () => {
+    let userRepository: UserRepositoryInMemory;
+    let requestResetPasswordRepository: RequestResetPasswordRepositoryInMemory;
     let requestResetPasswordTokenGenerator: FakeResetPasswordTokenGenerator;
+    let emailSender: FakeEmailSender;
 
     beforeEach(() => {
-        requestResetPasswordRepository = new InMemoryRequestResetPasswordRepository();
+        requestResetPasswordRepository = new RequestResetPasswordRepositoryInMemory();
         requestResetPasswordTokenGenerator = new FakeResetPasswordTokenGenerator();
+        userRepository = new UserRepositoryInMemory();
+        userRepository.populate(An.ExistingUser().withEmail("jane.doe@gmail.com").build());
+        emailSender = new FakeEmailSender();
     });
 
-    test('request a reset password', async () => {
+    test('should initiate a reset password flow', async () => {
         const result = await resetPassword({email: 'jane.doe@gmail.com'});
         expect(isRight(result)).toBeTruthy();
-        expect(result).toEqual(right(new RequestPasswordResetSent("jane.doe@gmail.com")));
+        expect(result).toEqual(right(new ResetPasswordFlowInitiated("jane.doe@gmail.com")));
     });
 
     test('should generate a reset password token', async () => {
@@ -105,12 +42,31 @@ describe('Request reset password', function () {
         expect(requestResetPasswordRepository.shouldHaveStore(tokenGenerated)).toBeTruthy();
     });
 
+    test('should send an email to the user containing the reset password token', async () => {
+        const tokenGenerated = '12345';
+        requestResetPasswordTokenGenerator.nextToken(tokenGenerated);
+        await resetPassword({email: 'jane.doe@gmail.com'});
+        expect(emailSender.hasSentResetPasswordEmailTo('jane.doe@gmail.com', tokenGenerated)).toBeTruthy();
+    });
+
+    describe('should returns an error', () => {
+        test('when email corresponds to no user', async () => {
+            const result = await resetPassword({email: 'john.doe@gmail.com'});
+            checkError(result, new EmailDoesNotExists('john.doe@gmail.com'));
+        });
+
+        test('when email sending fails', async () => {
+            emailSender.throwError(new SendResetPasswordEmailError());
+            const result = await resetPassword({email: 'jane.doe@gmail.com'});
+            checkError(result, new SendResetPasswordEmailError());
+        });
+    });
 
     function resetPassword(request: UnvalidatedResetPasswordRequest) {
         return prepareWorkflow()(request)();
     }
 
     function prepareWorkflow() {
-        return requestResetPassword(requestResetPasswordRepository, requestResetPasswordTokenGenerator);
+        return requestResetPassword(requestResetPasswordRepository, requestResetPasswordTokenGenerator, userRepository, emailSender);
     }
 });

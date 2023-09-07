@@ -1,14 +1,19 @@
 {
-    "compilerOptions": {
-        "target": "es2016",
-        "module": "commonjs",
-        "strict": true,
-        "outDir": "dist",
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-        "experimentalDecorators": true,
-        "strictPropertyInitialization": false
-    },
-    "lib": ["es2015"]
+  "compilerOptions": {
+    "types": [
+      "vitest/globals"
+    ],
+    "target": "es2016",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false
+  },
+  "lib": [
+    "es2015"
+  ]
 }

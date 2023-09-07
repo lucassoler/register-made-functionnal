@@ -1,13 +1,12 @@
 import {DataSource, QueryFailedError} from "typeorm";
 import {UserEntity} from "../../../configuration/typeorm/entities/user";
 import {UserRepository} from "../domain/ports/userRepository";
-import {EitherAsync} from "purify-ts";
 import {EmailAlreadyUsed, PersistUserError} from "../domain/register.errors";
-import {User} from "../domain/register.types";
+import {Email, User} from "../domain/register.types";
 import {pipe} from "fp-ts/function";
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
-import * as TO from 'typeorm';
+import {fromNullable, TaskOption} from "fp-ts/TaskOption";
 
 export class UserRepositoryTypeOrm implements UserRepository {
     constructor(private readonly typeOrmDataSource: DataSource) {
@@ -30,5 +29,9 @@ export class UserRepositoryTypeOrm implements UserRepository {
             ),
             TE.map(() => user)
         );
+    }
+
+    findByEmail(email: Email): TaskOption<User> {
+        return fromNullable(null);
     }
 }

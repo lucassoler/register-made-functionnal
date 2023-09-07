@@ -1,8 +1,4 @@
-
-import {
-    UnvalidatedUser,
-    UserRegister
-} from "../../writes/domain/register.types";
+import {UnvalidatedUser, UserRegister} from "../../writes/domain/register.types";
 import {FakePasswordEncryptor} from "../../writes/infrastructure/fakePasswordEncryptor";
 import {A} from "../builders/A";
 import {MIN_PASSWORD_LENGTH} from "../../writes/workflows/register/checkPassword";
@@ -17,13 +13,10 @@ import {
     PasswordShouldHaveAMinimumLength
 } from "../../writes/domain/register.errors";
 import {FakeUuidGenerator} from "../../writes/infrastructure/fakeUuidGenerator";
-import {
-    encryptUserPassword,
-    identifyUser,
-    register,
-    saveUser
-} from "../../writes/workflows/register/register";
+import {encryptUserPassword, identifyUser, register, saveUser} from "../../writes/workflows/register/register";
 import {isRight, right} from "fp-ts/Either";
+import {An} from "../builders/An";
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('Register a new user', function () {
     let userRepository: UserRepositoryInMemory;
@@ -32,7 +25,7 @@ describe('Register a new user', function () {
     beforeEach(() => {
         userRepository = new UserRepositoryInMemory();
     });
-
+    
     test('should register a new user', async () => {
         const result = await registerUser(A.User().build());
         expect(isRight(result)).toBeTruthy();
@@ -42,20 +35,20 @@ describe('Register a new user', function () {
     test('should persist user', async () => {
         const user = A.User().build();
         await registerUser(user);
-        const persistedUser = userRepository.findByEmail(user.email);
+        const persistedUser = userRepository.findByEmail2(user.email);
         expect(persistedUser.email).toBe(user.email);
     });
 
     test('user password should be encrypted before persisted', async () => {
         const user = A.User().build();
         await registerUser(user);
-        const persistedUser = userRepository.findByEmail(user.email);
+        const persistedUser = userRepository.findByEmail2(user.email);
         expect(persistedUser.password).toBe(user.password + FakePasswordEncryptor.ENCRYPTION_KEY);
     });
 
     describe('should returns an error if', function () {
         test('email is already used', async () => {
-            userRepository.populate(A.User().withEmail("jane.doe@gmail.com").build());
+            userRepository.populate(An.ExistingUser().withEmail("jane.doe@gmail.com").build());
             const result = await registerUser(A.User().withEmail("jane.doe@gmail.com").build());
             checkError(result, new EmailAlreadyUsed("jane.doe@gmail.com"));
         });
