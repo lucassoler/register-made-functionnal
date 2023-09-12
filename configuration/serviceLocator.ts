@@ -23,9 +23,23 @@ import {
     saveUser
 } from "../identityAndAccess/writes/workflows/register/register";
 import {UserRepositoryTypeOrm} from "../identityAndAccess/writes/infrastructure/userRepositoryTypeOrm";
+import {
+    requestResetPassword,
+    RequestResetPasswordWorkflow
+} from "../identityAndAccess/writes/workflows/requestResetPassword/request-reset-password.workflow";
+import {
+    RequestResetPasswordRepositoryInMemory
+} from "../identityAndAccess/writes/infrastructure/requestResetPasswordRepositoryInMemory";
+import {IStoreResetPasswordTokens} from "../identityAndAccess/writes/domain/ports/IStoreResetPasswordTokens";
+import {IGenerateResetPasswordToken} from "../identityAndAccess/writes/domain/ports/IGenerateResetPasswordToken";
+import {
+    FakeResetPasswordTokenGenerator
+} from "../identityAndAccess/writes/infrastructure/fakeResetPasswordTokenGenerator";
 
 export interface Dependencies {
     userRepository: UserRepository,
+    tokenGenerator: IGenerateResetPasswordToken,
+    requestResetPasswordRepository: IStoreResetPasswordTokens,
     passwordEncryptor: PasswordEncryptorService,
     uuidGenerator: UuidGenerator,
     emailSender: ISendEmailToCustomer,
@@ -40,6 +54,8 @@ export const serviceLocator = (): Dependencies => {
 
     return {
         passwordEncryptor: new FakePasswordEncryptor(),
+        requestResetPasswordRepository: new RequestResetPasswordRepositoryInMemory(),
+        tokenGenerator: new FakeResetPasswordTokenGenerator(),
         userRepository: new UserRepositoryTypeOrm(dataSource),
         uuidGenerator: new CryptoUuidGenerator(),
         emailSender: new FakeEmailSender(),
@@ -51,6 +67,7 @@ export const serviceLocator = (): Dependencies => {
 export interface Workflows {
     register: RegisterWorkflow,
     sendWelcomeEmail: SendWelcomeEmailWorkflow,
+    requestResetPassword: RequestResetPasswordWorkflow,
     mapDomainError: MapDomainError,
     domainEventsPublisher: DomainEventPublisher,
 }
@@ -58,6 +75,7 @@ export interface Workflows {
 export const workflows = (dependencies: Dependencies): Workflows => {
     return {
         register: register(encryptUserPassword(dependencies.passwordEncryptor), identifyUser(dependencies.uuidGenerator), saveUser(dependencies.userRepository)),
+        requestResetPassword: requestResetPassword(dependencies.requestResetPasswordRepository, dependencies.tokenGenerator, dependencies.userRepository, dependencies.emailSender),
         sendWelcomeEmail: sendEmailToCustomer(dependencies.emailSender),
         mapDomainError: ExpressUtils.domainErrorHandling(dependencies.logger),
         domainEventsPublisher: new DomainEventPublisher()

@@ -6,7 +6,7 @@ import {Email, User} from "../domain/register.types";
 import {pipe} from "fp-ts/function";
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
-import {fromNullable, TaskOption} from "fp-ts/TaskOption";
+import * as TO from 'fp-ts/TaskOption';
 
 export class UserRepositoryTypeOrm implements UserRepository {
     constructor(private readonly typeOrmDataSource: DataSource) {
@@ -31,7 +31,16 @@ export class UserRepositoryTypeOrm implements UserRepository {
         );
     }
 
-    findByEmail(email: Email): TaskOption<User> {
-        return fromNullable(null);
+    findByEmail(email: Email): TO.TaskOption<User> {
+        return pipe(
+            this.typeOrmDataSource.getRepository(UserEntity)
+                .createQueryBuilder("user").where('user.email = :email', {email}),
+            (qb) => TO.tryCatch(() => qb.getOneOrFail()),
+            TO.map((userEntity) => ({
+                id: userEntity.id,
+                email: userEntity.email,
+                password: userEntity.password
+            }))
+        );
     }
 }

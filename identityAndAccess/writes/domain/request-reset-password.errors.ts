@@ -1,4 +1,4 @@
-import {DomainServerError} from "../../../sharedKernel/domain/domainError";
+import {DomainNotFoundError, DomainServerError} from "../../../sharedKernel/domain/domainError";
 import IdentityErrorCodes from "./identityErrorCodes";
 import {Email} from "./register.types";
 
@@ -10,7 +10,7 @@ export class PersistResetPasswordTokenError extends DomainServerError {
     }
 }
 
-export class EmailDoesNotExists extends DomainServerError {
+export class EmailDoesNotExists extends DomainNotFoundError {
     readonly code = IdentityErrorCodes.EmailDoesNotExists;
 
     constructor(readonly email: Email) {

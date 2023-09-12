@@ -3,7 +3,6 @@ import {getDataSource} from "../../../../configuration/typeorm/connection";
 import {NodeEnvironmentVariables} from "../../../../configuration/environment/environmentVariables";
 import {UserEntity} from "../../../../configuration/typeorm/entities/user";
 import {UserRepositoryTypeOrm} from "../../../writes/infrastructure/userRepositoryTypeOrm";
-import {FakeUuidGenerator} from "../../../writes/infrastructure/fakeUuidGenerator";
 import {User} from "../../../writes/domain/register.types";
 import {EmailAlreadyUsed, PersistUserError} from "../../../writes/domain/register.errors";
 import * as E from "fp-ts/Either";
@@ -11,11 +10,10 @@ import {isLeft} from "fp-ts/Either";
 
 describe('UserRepositoryTypeOrm - Save', () => {
     let repository: UserRepositoryTypeOrm;
-    let fakeUuidGenerator: FakeUuidGenerator;
     let dataSource: DataSource;
 
     const USER_TO_PERSIST = {
-        id: 'f7eafd96-c194-4730-8de6-9da1c330bff3',
+        id: '874a52b8-808c-4482-ad98-e99e03b7ef25',
         email: "jane.doe@gmail.com",
         password: "Password"
     };
@@ -25,7 +23,6 @@ describe('UserRepositoryTypeOrm - Save', () => {
     });
 
     beforeEach(() => {
-        fakeUuidGenerator = new FakeUuidGenerator();
         repository = new UserRepositoryTypeOrm(dataSource);
     });
 
@@ -34,7 +31,7 @@ describe('UserRepositoryTypeOrm - Save', () => {
             .createQueryBuilder()
             .delete()
             .from(UserEntity)
-            .where("id = ANY(:ids)", {ids: [USER_TO_PERSIST.id, 'ae358410-25f4-4651-b94b-2b786b358d5f']})
+            .where("id = ANY(:ids)", {ids: [USER_TO_PERSIST.id, 'ae358410-25f4-4651-b94b-2b786b358d5f', '51dc815c-4530-4562-a417-5f3aa77fa93f']})
             .execute();
     });
 
@@ -61,8 +58,16 @@ describe('UserRepositoryTypeOrm - Save', () => {
 
 
     test('uncaught error : id already used', async () => {
-        await repository.persistUser(USER_TO_PERSIST)();
-        const result = await repository.persistUser(USER_TO_PERSIST)();
+        await repository.persistUser({
+            id: '51dc815c-4530-4562-a417-5f3aa77fa93f',
+            email: "jane.doe@gmail.com",
+            password: "Password"
+        })();
+        const result = await repository.persistUser({
+            id: '51dc815c-4530-4562-a417-5f3aa77fa93f',
+            email: "jane.doe@gmail.com",
+            password: "Password"
+        })();
         expect(isLeft(result)).toBeTruthy();
         expect(result).toEqual(E.left(new PersistUserError()));
     });

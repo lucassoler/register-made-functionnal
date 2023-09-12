@@ -1,4 +1,4 @@
-import { Schema } from "express-validator";
+import {Schema} from "express-validator";
 
 export const registerUserSchema = (): Schema => {
     return {
@@ -24,5 +24,21 @@ export const registerUserSchema = (): Schema => {
             },
             trim: true
         },
+    }
+};
+
+export const requestResetPasswordSchema = (): Schema => {
+    return {
+        "email": {
+            in: 'body',
+            exists: {
+                errorMessage: "email is required"
+            },
+            isString: {
+                errorMessage: 'email must be a valid string',
+                bail: true
+            },
+            trim: true
+        }
     }
 };
