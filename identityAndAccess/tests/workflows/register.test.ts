@@ -1,4 +1,4 @@
-import {UnvalidatedUser, UserRegister} from "../../writes/domain/register.types";
+import {UnvalidatedUser, UserRegistered as UserRegistered} from "../../writes/domain/register.types";
 import {FakePasswordEncryptor} from "../../writes/infrastructure/fakePasswordEncryptor";
 import {A} from "../builders/A";
 import {MIN_PASSWORD_LENGTH} from "../../writes/workflows/register/checkPassword";
@@ -29,20 +29,20 @@ describe('Register a new user', function () {
     test('should register a new user', async () => {
         const result = await registerUser(A.User().build());
         expect(isRight(result)).toBeTruthy();
-        expect(result).toEqual(right(new UserRegister("f7eafd96-c194-4730-8de6-9da1c330bff3", "jane.doe@gmail.com")));
+        expect(result).toEqual(right(new UserRegistered("f7eafd96-c194-4730-8de6-9da1c330bff3", "jane.doe@gmail.com")));
     });
 
     test('should persist user', async () => {
         const user = A.User().build();
         await registerUser(user);
-        const persistedUser = userRepository.findByEmail2(user.email);
+        const persistedUser = userRepository.getPersistedUserByEmail(user.email);
         expect(persistedUser.email).toBe(user.email);
     });
 
     test('user password should be encrypted before persisted', async () => {
         const user = A.User().build();
         await registerUser(user);
-        const persistedUser = userRepository.findByEmail2(user.email);
+        const persistedUser = userRepository.getPersistedUserByEmail(user.email);
         expect(persistedUser.password).toBe(user.password + FakePasswordEncryptor.ENCRYPTION_KEY);
     });
 

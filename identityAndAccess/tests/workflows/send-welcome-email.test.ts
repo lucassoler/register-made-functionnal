@@ -1,4 +1,4 @@
-import {UserRegister} from "../../writes/domain/register.types";
+import {UserRegistered} from "../../writes/domain/register.types";
 import {FakeEmailSender} from "../../writes/infrastructure/fake-email.sender";
 import {WelcomeEmailSent} from "../../writes/domain/welcome-email.sent";
 import {SendWelcomeEmailError} from "../../writes/domain/send-welcome-email.errors";
@@ -38,7 +38,7 @@ describe("send welcome email on register", () => {
 
     async function runWorkflow(email: string = "my-test@email.com") {
         const workflow = prepareWorkflow();
-        return await workflow(new UserRegister("cfd951d4-cb21-4969-af9e-79a518297a57", email))();
+        return await workflow(new UserRegistered("cfd951d4-cb21-4969-af9e-79a518297a57", email))();
     }
 });
 

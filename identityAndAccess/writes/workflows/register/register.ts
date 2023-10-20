@@ -5,7 +5,7 @@ import {
     RegisterErrors,
     RegisterEvents,
     UnvalidatedUser,
-    User, UserRegister,
+    User, UserRegistered as UserRegistered,
     ValidatedUser
 } from "../../domain/register.types";
 import {checkUserToRegister} from "./checkUserToRegister";
@@ -32,7 +32,8 @@ export const register: (
         );
 
 const checkUser = (user: UnvalidatedUser): TaskEither<RegisterErrors, ValidatedUser> =>
-    pipe(checkUserToRegister(user), TE.fromEither)
+    pipe(checkUserToRegister(user), TE.fromEither);
+
 type IdentifyUser = (encryptedUser: EncryptedUser) => TaskEither<RegisterErrors, User>;
 
 export const identifyUser: (uuidGenerator: UuidGenerator) =>
@@ -43,6 +44,7 @@ export const identifyUser: (uuidGenerator: UuidGenerator) =>
             TE.fromTask,
             TE.map((uuid) => ({...user, id: uuid})),
         );
+
 type EncryptUserPassword = (validatedUser: ValidatedUser) => TE.TaskEither<RegisterErrors, EncryptedUser>;
 
 export const encryptUserPassword: (encryptPasswordService: PasswordEncryptorService) => EncryptUserPassword = (
@@ -60,4 +62,4 @@ export const saveUser: (userRepository: UserRepository) => SaveUser = (userRepos
         userRepository.persistUser(user);
 
 const createRegisterEvents = (user: User): TE.TaskEither<RegisterErrors, RegisterEvents> =>
-    TE.right(new UserRegister(user.id, user.email));
+    TE.right(new UserRegistered(user.id, user.email));

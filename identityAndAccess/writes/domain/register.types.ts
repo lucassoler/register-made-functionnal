@@ -34,7 +34,7 @@ export abstract class RegisterEvents extends DomainEvent {
 }
 export type RegisterErrors = InvalidUser | EncryptUserError | EmailAlreadyUsed;
 
-export class UserRegister extends RegisterEvents {
+export class UserRegistered extends RegisterEvents {
     constructor(readonly userId: UserId, readonly email: Email) {
         super();
     }

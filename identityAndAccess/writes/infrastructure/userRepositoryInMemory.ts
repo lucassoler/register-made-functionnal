@@ -21,7 +21,7 @@ export class UserRepositoryInMemory implements UserRepository {
         return fromNullable(user);
     }
 
-    findByEmail2(email: Email): EncryptedUser {
+    getPersistedUserByEmail(email: Email): EncryptedUser {
         const user = this.persistedUsers.find(user => user.email === email);
         if (!user) throw new Error('User not found');
         return user;
